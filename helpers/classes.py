@@ -106,7 +106,9 @@ class Collection:
         visits ONS website
         extracts bulletin for all 
         sections found in the main navigation bar:
-            businessindustryandtrade, economy, employmentandlabourmarket, 
+            businessindustryandtrade, 
+            economy, 
+            employmentandlabourmarket, 
             peoplepopulationandcommunity
         '''
 
@@ -174,6 +176,11 @@ class Collection:
         }
         
     def process_collection(self):
+        '''
+        wrapper to process the whole collection
+        runs process_bulletins on all stored
+        bulletins within our collection
+        '''
         sections = self.sections.keys()
         for section in tqdm(sections):
             subsections = self.sections.get(section).keys()
@@ -183,6 +190,11 @@ class Collection:
                     self.process_bulletin(url)
 
     def points_entity_processing(self, main_points):
+        '''
+        returns index of points within main-points
+        that relate to entities DATE AND PERCENT
+        and DATE only.
+        '''
         date_and_percent = []
         just_dates = []
 
@@ -198,6 +210,8 @@ class Collection:
             
         return date_and_percent, just_dates
 
+# thanks to Patrick Lewis
+# following the Unsupervised QA paper
 @attr.s(hash = True)
 class Cloze:
     cloze_id = attr.ib()

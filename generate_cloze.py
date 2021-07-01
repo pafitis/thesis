@@ -11,18 +11,33 @@ from helpers.classes import Cloze
 nlp = spacy.load(SPACY_MODEL)
 
 def mask_answer(text, answer_text, answer_start, answer_type):
+    '''
+    look at noun_phrase_answer_generator and named_entity_answer_generator
+    they are responsible for generating the inputs to this function
+    
+    this function constructs the MASKED sentence,
+    you provide indeces of interest and it removes that desired segment and MASKS it
+    '''
     before, after = text[:answer_start], text[answer_start + len(answer_text): ]
     return before + CLOZE_MASKS[answer_type] + after
 
 def noun_phrase_answer_generator(sentence):
+    '''
+    returns 3-dim tuple
+    (entity, start_pos, label)
+    start_pos is useful to know where to place the mask
+    '''
     return [
-        (noun_phrase.text, 
-        noun_phrase.start_char - sentence.start_char,
-        NOUNPHRASE_LABEL) 
+        (noun_phrase.text, noun_phrase.start_char - sentence.start_char, NOUNPHRASE_LABEL) 
         for noun_phrase in sentence.noun_chunks
         ]
 
 def named_entity_answer_generator(sentence):
+    '''
+    returns 3-dim tuple
+    (entity, start_pos, label)
+    start_pos is useful to know where to place the mask
+    '''
     return [
         (ent.text, ent.start_char - sentence.start_char, ent.label_)
         for ent in sentence.ents
@@ -84,10 +99,13 @@ if __name__ == '__main__':
 
     paragraph = "We estimate excess winter mortality by comparing the winter months of December to March with the average of the four-month periods before and after"
 
-    paragraphs = [paragraph, paragraph]
+    paragraph = 'The non-financial services sector increased by £25 billion to £744.4 billion'
+
+    paragraphs = [paragraph]
 
     import spacy
-    nlp = spacy.load('en_core_web_sm')
+    nlp = spacy.load('en_core_web_trf')
+    # nlp = spacy.load('en_core_web_sm')
     answer_generator = named_entity_answer_generator
     clozes = [c for p in paragraphs for c in generate_clozes_from_point(p, answer_generator)]
     print(clozes)

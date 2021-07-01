@@ -4,7 +4,7 @@ HERE = os.path.dirname(os.path.realpath(__file__))
 SEED = 96
 
 # spaCy
-SPACY_MODEL = 'en_core_web_sm'
+SPACY_MODEL = 'en_core_web_trf'
 
 ## Cloze thresholds
 MIN_CLOZE_WORD_LEN = 5
