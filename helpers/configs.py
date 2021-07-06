@@ -77,3 +77,9 @@ HEURISTIC_CLOZE_TYPE_QUESTION_MAP = {
     'ORDINAL': ['How much', 'How many'],
     'CARDINAL': ['How much', 'How many'],
 }
+
+
+
+# EXCEL PROCESSING
+ROW_NAN_THRESHOLD = 1.5
+COLUMN_NAN_THRESHOLD = 1.5

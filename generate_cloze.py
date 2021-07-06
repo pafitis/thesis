@@ -1,3 +1,4 @@
+from numpy import save
 import spacy
 import hashlib
 from helpers.configs import MIN_ANSWER_CHAR_LEN, MAX_ANSWER_CHAR_LEN,\
@@ -32,16 +33,15 @@ def noun_phrase_answer_generator(sentence):
         for noun_phrase in sentence.noun_chunks
         ]
 
-def named_entity_answer_generator(sentence):
+def named_entity_answer_generator(sentence, entity_set = None):
     '''
     returns 3-dim tuple
     (entity, start_pos, label)
     start_pos is useful to know where to place the mask
     '''
-    return [
-        (ent.text, ent.start_char - sentence.start_char, ent.label_)
-        for ent in sentence.ents
-    ]
+
+    return [(ent.text, ent.start_char - sentence.start_char, ent.label_)
+        for ent in sentence.ents]
 
 def is_appropriate_cloze(sentence):
     '''returns boolean if sentence is appropriate cloze'''
@@ -73,10 +73,12 @@ def generate_clozes_from_point(point, answer_generator):
 
     clozes = []
     doc = nlp(point)
+    entity_set = set()
     for sentence in doc.sents:
         is_good = is_appropriate_cloze(sentence.text)
         if is_good:
             answers = answer_generator(sentence)
+            # answers, entity_set = answer_generator(sentence, entity_set)
             for answer_text, answer_start, answer_type in answers:
                 if is_appropriate_answer(answer_text):
                     yield Cloze(
@@ -97,15 +99,23 @@ def generate_clozes_from_point(point, answer_generator):
 
 if __name__ == '__main__':
 
-    paragraph = "We estimate excess winter mortality by comparing the winter months of December to March with the average of the four-month periods before and after"
-
-    paragraph = 'The non-financial services sector increased by £25 billion to £744.4 billion'
-
-    paragraphs = [paragraph]
+    paragraph1 = "We estimate excess winter mortality by comparing the winter months of December to March with the average of the four-month periods before and after"
+    paragraph2 = 'The non-financial services sector increased by £25 billion to £744.4 billion'
+    paragraphs = [paragraph1, paragraph2]
 
     import spacy
     nlp = spacy.load('en_core_web_trf')
-    # nlp = spacy.load('en_core_web_sm')
     answer_generator = named_entity_answer_generator
-    clozes = [c for p in paragraphs for c in generate_clozes_from_point(p, answer_generator)]
+    clozes = [c for p in paragraphs \
+        for c in generate_clozes_from_point(p, answer_generator)]
+
+    # okay this is somewhat hacky
+    # here I update a set() which will contain the unique
+    # (entity, label) pairs found in our clozes
+    # this will be useful (hopefully) later when
+    # we want to know more about different labels and their nature
+    entity_set = set()
+    [entity_set.add((x.answer_text, x.answer_type)) for x in clozes]
+
     print(clozes)
+    print(entity_set)
