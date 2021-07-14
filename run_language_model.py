@@ -7,7 +7,7 @@ from helpers.classes import Collection
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from datetime import datetime
-
+from time import time
 from transformers import RobertaTokenizer, RobertaForMaskedLM
 
 from helpers.cloze_generation import \
@@ -28,11 +28,11 @@ tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
 
 test_df = df[:3]
 
-start_time = time.time()
+start_time = time()
 print('Running language model...')
 results, entity_set, entities = run_language_model(test_df, model, tokenizer, True)
 
-end_time = time.time()
+end_time = time()
 
 print('Done!')
 print(f'Time took: {end_time - start_time}')
