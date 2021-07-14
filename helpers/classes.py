@@ -215,7 +215,6 @@ class Collection:
 @attr.s(hash = True)
 class Cloze:
     cloze_id = attr.ib()
-    point = attr.ib()
     source_text = attr.ib()
     source_start = attr.ib()
     cloze_text = attr.ib()

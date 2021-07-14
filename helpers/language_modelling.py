@@ -44,6 +44,10 @@ def multitoken_prediction(
 
     returns sentence with all masks predicted
     '''
+
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    model = model.to(device)
+
     num_tokens = sentence.count(tokenizer.mask_token)
     if not num_tokens:
         raise ValueError('No masks found in sentence.')
@@ -52,7 +56,7 @@ def multitoken_prediction(
     answer_given = []
 
     for _iter in range(num_tokens):
-        inputs = tokenizer(sentence, return_tensors = 'pt')
+        inputs = tokenizer(sentence, return_tensors = 'pt').to(device)
         outputs = model(**inputs)
 
         # find where masks are located
@@ -200,7 +204,7 @@ def run_language_model(
         [entities.get(x[1]).append(x[0]) for x in entity_set if x[0] not in entities.get(x[1])]
 
         with open(
-            'results/{model_name}_{current_time}_entity_dictionary.json', 'w') as f:
+            f'results/{model_name}_{current_time}_entity_dictionary.json', 'w') as f:
             json.dump(entities, f)
 
     return results, entity_set, entities
