@@ -1,12 +1,10 @@
-from generate_cloze import multitoken_mask_answer
 import numpy
 import torch
 from transformers import \
     pipeline, \
     BertForMaskedLM, BertTokenizerFast, RobertaForMaskedLM, RobertaTokenizerFast, ElectraForMaskedLM, ElectraTokenizerFast, AlbertForMaskedLM, AlbertTokenizerFast
 
-from helpers.cloze_generation import \
-    generate_clozes_from_point, named_entity_answer_generator as ne_answer_generator, noun_phrase_answer_generator as np_answer_generator
+from helpers.cloze_generation import generate_clozes_from_point,named_entity_answer_generator as ne_answer_generator, noun_phrase_answer_generator as np_answer_generator, multitoken_mask_answer
 
 import pandas as pd
 import numpy as np
