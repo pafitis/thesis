@@ -22,6 +22,19 @@ def mask_answer(text, answer_text, answer_start, answer_type):
     before, after = text[:answer_start], text[answer_start + len(answer_text): ]
     return before + CLOZE_MASKS[answer_type] + after
 
+def multitoken_mask_answer(
+    text, answer_text, answer_start, tokenizer):
+    '''
+    constructs MASKED sentence but instead now of just using a single mask, we split the answer into multi-token masks; ie if the answer_text is tokenized into 3 tokens, then the output sentence will contain three masks; works similarly to mark_answer()
+
+    requires tokenizer
+    '''
+    before, after = text[:answer_start-1], text[answer_start + len(answer_text): ]
+    num_tokens = len(tokenizer.tokenize(answer_text))
+
+    return before + (tokenizer.mask_token * num_tokens) + after
+
+
 def noun_phrase_answer_generator(sentence):
     '''
     returns 3-dim tuple
@@ -69,11 +82,13 @@ def get_cloze_id(paragraph_text, sentence_text, answer_text):
     rep = paragraph_text + sentence_text + answer_text
     return hashlib.sha1(rep.encode()).hexdigest()
 
-def generate_clozes_from_point(point, answer_generator):
+def generate_clozes_from_point(point, answer_generator, tokenizer = None):
 
     clozes = []
     doc = nlp(point)
     entity_set = set()
+    multi_token = True if tokenizer else False
+
     for sentence in doc.sents:
         is_good = is_appropriate_cloze(sentence.text)
         if is_good:
@@ -83,10 +98,14 @@ def generate_clozes_from_point(point, answer_generator):
                 if is_appropriate_answer(answer_text):
                     yield Cloze(
                         cloze_id = get_cloze_id(point, sentence.text, answer_text),
-                        point = point,
                         source_text = sentence,
                         source_start = sentence.start_char,
-                        cloze_text = mask_answer(sentence.text, answer_text, answer_start, answer_type),
+                        cloze_text = \
+                            multitoken_mask_answer(
+                                sentence.text, answer_text, answer_start, tokenizer) 
+                            if multi_token else 
+                            mask_answer(
+                                sentence.text, answer_text, answer_start, answer_type),
                         answer_text = answer_text,
                         answer_start = answer_start,
                         constituency_parse = None,

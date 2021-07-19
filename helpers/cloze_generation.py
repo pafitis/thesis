@@ -22,6 +22,19 @@ def mask_answer(text, answer_text, answer_start, answer_type):
     before, after = text[:answer_start], text[answer_start + len(answer_text): ]
     return before + CLOZE_MASKS[answer_type] + after
 
+# def multitoken_mask_answer_DEPRECATED(
+#     text, answer_text, answer_start, tokenizer):
+#     '''
+#     constructs MASKED sentence but instead now of just using a single mask, we split the answer into multi-token masks; ie if the answer_text is tokenized into 3 tokens, then the output sentence will contain three masks; works similarly to mark_answer()
+
+#     requires tokenizer
+#     '''
+#     before, after = text[:answer_start], text[answer_start + len(answer_text): ]
+#     # before, after = text[:answer_start-1], text[answer_start + len(answer_text): ]
+#     num_tokens = len(tokenizer.tokenize(answer_text))
+
+#     return before + (tokenizer.mask_token * num_tokens) + after
+
 def multitoken_mask_answer(
     text, answer_text, answer_start, tokenizer):
     '''
@@ -29,32 +42,42 @@ def multitoken_mask_answer(
 
     requires tokenizer
     '''
-    before, after = text[:answer_start-1], text[answer_start + len(answer_text): ]
+    before, after = text[:answer_start], text[answer_start + len(answer_text): ]
+    # before, after = text[:answer_start-1], text[answer_start + len(answer_text): ]
     num_tokens = len(tokenizer.tokenize(answer_text))
 
-    return before + (tokenizer.mask_token * num_tokens) + after
+    return [before + (tokenizer.mask_token * x) + after for x in range(1, 6)]
 
 
-def noun_phrase_answer_generator(sentence):
+def noun_phrase_answer_generator(sentence, filter_labels = []):
     '''
     returns 3-dim tuple
     (entity, start_pos, label)
     start_pos is useful to know where to place the mask
+    
+    filter_labels not implimented yet, look @ named_entity_answer_generator
     '''
+
     return [
         (noun_phrase.text, noun_phrase.start_char - sentence.start_char, NOUNPHRASE_LABEL) 
         for noun_phrase in sentence.noun_chunks
         ]
 
-def named_entity_answer_generator(sentence, entity_set = None):
+def named_entity_answer_generator(sentence, filter_labels = []):
     '''
     returns 3-dim tuple
     (entity, start_pos, label)
     start_pos is useful to know where to place the mask
-    '''
 
-    return [(ent.text, ent.start_char - sentence.start_char, ent.label_)
-        for ent in sentence.ents]
+    filter_labels: pass a list of labels you want to return like: [DATE, GPE, MONEY]; if an empty list is passed then returns all
+    '''
+    if len(filter_labels):
+        return [
+            (ent.text, ent.start_char - sentence.start_char, ent.label_)
+            for ent in sentence.ents if ent.label_ in filter_labels]
+    else:
+        return [(ent.text, ent.start_char - sentence.start_char, ent.label_)
+            for ent in sentence.ents]
 
 def is_appropriate_cloze(sentence):
     '''returns boolean if sentence is appropriate cloze'''
@@ -82,7 +105,8 @@ def get_cloze_id(paragraph_text, sentence_text, answer_text):
     rep = paragraph_text + sentence_text + answer_text
     return hashlib.sha1(rep.encode()).hexdigest()
 
-def generate_clozes_from_point(point, answer_generator, tokenizer = None):
+def generate_clozes_from_point(
+    point, answer_generator, tokenizer = None, filter_labels =[]):
 
     clozes = []
     doc = nlp(point)
@@ -92,7 +116,7 @@ def generate_clozes_from_point(point, answer_generator, tokenizer = None):
     for sentence in doc.sents:
         is_good = is_appropriate_cloze(sentence.text)
         if is_good:
-            answers = answer_generator(sentence)
+            answers = answer_generator(sentence, filter_labels = filter_labels)
             # answers, entity_set = answer_generator(sentence, entity_set)
             for answer_text, answer_start, answer_type in answers:
                 if is_appropriate_answer(answer_text):
