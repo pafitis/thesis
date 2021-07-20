@@ -10,6 +10,8 @@ from datetime import datetime
 from time import time
 from transformers import RobertaTokenizer, RobertaForMaskedLM
 
+import torch
+
 from helpers.cloze_generation import \
     generate_clozes_from_point, named_entity_answer_generator as ne_answer_generator, noun_phrase_answer_generator as np_answer_generator
 
@@ -26,11 +28,11 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 model = RobertaForMaskedLM.from_pretrained('roberta-base').to(device)
 tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
 
-test_df = df[:3]
+# test_df = df[:3]
 
 start_time = time()
 print('Running language model...')
-results, entity_set, entities = run_language_model(test_df, model, tokenizer, True)
+results, entity_set, entities = run_language_model(df, model, tokenizer, True)
 
 end_time = time()
 
