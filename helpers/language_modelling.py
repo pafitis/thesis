@@ -261,29 +261,92 @@ def run_language_model(
 
     return results, entity_set, entities
 
-def summarise_results(results, verbose = True):
+def summarise_results(results, includes_perplexity = False, verbose = True):
+    '''
+    wrapper function that uses input from run_language_model.py to determine the number of correct predictions, incorrect predictions and other summary metrics.
+    
+    we introduced perplexity measures so this handles that too
+    input results needs to be formatted as
+
+    results = [row1, row2, ..., row2015]
+        row1 = [entry_1, entry_2, ..., entry_N]
+        if includes_perplexity:
+            entry_i = [ [confidence_results], [perplexity_results], truth, row_id, cloze_id]
+                confidence_results = \
+                    [confidence_answer, confidence, perplexity, seq_confidences, token_length]
+                perplexity_results = \
+                     [perplexity_answer, confidence, perplexity, seq_confidences, token_length]
+        else:
+            entry_i = [ confidence_answer, confidence, truth, row_id, cloze_id]
+    '''
+
+    if includes_perplexity:
+        perp_count_correct, perp_count_wrong = 0, 0
+        conf_count_correct, conf_count_wrong = 0, 0
+
+        perp_correct_preds, perp_wrong_preds = [], []
+        conf_correct_preds, conf_wrong_preds = [], []
+
     count_correct, count_wrong = 0, 0
     correct_preds, wrong_preds = [], []
 
     for row in results:
         if len(row):
             for entry in row:
-                # the way the mask LM works it includes a whitespace
-                # whereas our mask does not; this fixes that in the accuracy metrics
-                if entry[0][0] == ' ':
-                    entry[0] = entry[0][1:]
-                if entry[0] == entry[2]:
-                    count_correct += 1
-                    correct_preds.append(entry[0])
-                else:
-                    count_wrong += 1
-                    wrong_preds.append((entry[0], entry[2]))
+                if includes_perplexity:
+                    confidence_results = entry[0]
+                    perplexity_results = entry[1]
+
+                    truth = entry[2]
+
+                    conf_answer = confidence_results[0]
+                    perp_answer = perplexity_results[0]
+                    # remove whitespace
+                    for ans in [conf_answer, perp_answer]:
+                        if ans[0] == ' ':
+                            ans = ans[1:]
+                    
+                    if (conf_answer or perp_answer) == truth:
+                        count_correct += 1
+                        if conf_answer == truth:
+                            conf_count_correct += 1
+                            conf_correct_preds.append(conf_answer)
+                        else:
+                            perp_count_correct += 1
+                            perp_correct_preds.append(perp_answer)
+
+                    else:
+                        count_wrong += 1
+                        conf_count_wrong += 1
+                        perp_count_wrong += 1
+
+                        perp_wrong_preds.append((perp_answer, truth))
+                        conf_wrong_preds.append((conf_answer, truth))
+
+                else:    
+                    # the way the mask LM works it includes a whitespace
+                    # whereas our mask does not; this fixes that in the accuracy metrics
+                    if entry[0][0] == ' ':
+                        entry[0] = entry[0][1:]
+                    if entry[0] == entry[2]:
+                        count_correct += 1
+                        correct_preds.append(entry[0])
+                    else:
+                        count_wrong += 1
+                        wrong_preds.append((entry[0], entry[2]))
     if verbose:
         print(f'Total Examples: {count_wrong + count_correct}')
         print(f'Correct: {count_correct}, Incorrect: {count_wrong}')
         print(f'Percentage Correct: {np.round( ((count_correct / (count_correct+ count_wrong) ) * 100), 3)}%')
+        if includes_perplexity:
+            print(f'Confidence-based Answers: {np.round( ((conf_count_correct / (conf_count_correct + conf_count_wrong) ) * 100), 3)}')
+            print(f'Perplexity-based Answers: {np.round( ((perp_count_correct / (perp_count_correct + perp_count_wrong) ) * 100), 3)}')
 
-    return count_correct, count_wrong, correct_preds, wrong_preds
+    if includes_perplexity:
+        return count_correct, count_wrong, correct_preds, wrong_preds, \
+            conf_count_correct, conf_count_wrong, conf_correct_preds, conf_wrong_preds, perp_count_correct, perp_count_wrong, perp_correct_preds, perp_wrong_preds
+    else:
+        return count_correct, count_wrong, correct_preds, wrong_preds
 
 if __name__ == '__main__':
     with open('pickles/dataset_20210625_184837.pkl', 'rb') as f:

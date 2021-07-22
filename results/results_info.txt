@@ -1,3 +1,6 @@
+
+RobertaForMaskedLM_20210721_005608_results -> results for model that picks best answer from 0-5, with confidence and perplexity metrics
+
 RobertaForMaskedLM_20210719_234849_results -> results for model that picks best answer from 0-5 length token answers
 
 RobertaForMaskedLM_20210714_192239_results -> results for model that predicts answer equal to tokenized length answer (leaks info)

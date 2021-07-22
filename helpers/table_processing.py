@@ -99,7 +99,11 @@ def preprocess_table(table):
 
     
     if FILL_NA:
-        table = table.fillna('-')
+        table = table.fillna('')
+        table = table.replace('-', '')
+        table.columns = table.columns.fillna('-')
+
+    table = table.reset_index(drop = True)
 
 
     return table
