@@ -1,5 +1,4 @@
-import numpy
-from numpy.core.fromnumeric import prod
+
 import torch
 from transformers import \
     pipeline, \
