@@ -50,12 +50,13 @@ def check_t5(model, tokenizer, sentence, num_beams = 100, num_return_sequences=1
             return _result_prefix + _txt + _result_suffix, None
 
     sent = replace_mask(sentence)
-    
+    device = 'cuda:0' if torch.cuda.is_available else 'cpu'
     if sent != None:
 
         input_ids = tokenizer.encode_plus(
-            sent, add_special_tokens = True, return_tensors = 'pt').input_ids
-        outputs = model.generate(input_ids=input_ids, num_beams=num_beams, num_return_sequences=num_return_sequences)
+            sent, add_special_tokens = True, return_tensors = 'pt').input_ids.to(device)
+        outputs = model.generate(
+            input_ids=input_ids, num_beams=num_beams, num_return_sequences=num_return_sequences)
         
 
         _0_index = sent.index('<extra_id_0>')
