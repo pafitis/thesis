@@ -11,6 +11,8 @@ from helpers.classes import Collection
 from tqdm import tqdm
 from datetime import datetime
 
+import torch
+
 # def run_t5(
 #     sentence_list, model, tokenizer, verbose = False):
 
