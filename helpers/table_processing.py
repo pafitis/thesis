@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import os
 
-from helpers.configs import ROW_NAN_THRESHOLD, IMPUTE_COL_NANS, IMPUTE_COL_THRESHOLD, DROP_UNNAMED, FILL_NA, BACKFILL_HEADERS
+from helpers.configs import ROW_NAN_THRESHOLD, IMPUTE_COL_NANS, IMPUTE_COL_THRESHOLD, DROP_UNNAMED, FILL_NA, BACKFILL_HEADERS, IMPUTE_FIRST_COL_EMPTY
 
-def linearize_table(table, preprocess= True):
+def linearize_table(table, preprocess= True, include_all = False):
     '''
     outputs a pandas-read excel file (.xls/.xlsx)
     in linear format for use in LM models
@@ -13,12 +13,21 @@ def linearize_table(table, preprocess= True):
     '''
     if preprocess:
         table = preprocess_table(table)
-    
-    print('t')
-    print('t')
+    out_string = []
+    for _row in table.iterrows():
+        row_num = _row[0]
+        content = _row[1]
+        keys, vals = content.keys(), content.values
+        if include_all:
+            row_content = "; ".join([f"{k} is {v}" for k, v in zip(keys, vals)])
+        else:
+            row_content = "; ".join(
+                [f"{k} is {v}" for k, v in zip(keys, vals) \
+                    if v not in ['', ' '] or k not in ['-']])
+        
+        out_string.append(f"Row {row_num + 1}: {row_content}.")
 
-    pass
-
+    return ' '.join(out_string)
 
 def preprocess_table(table):
     '''
@@ -66,13 +75,16 @@ def preprocess_table(table):
     # and we want to repeatedly impute it for our LM
     # see: 'datasets/businessindustryandtrade_itandinternetindustry_datasets_ictactivityofukbusinessesecommerceandictactivity.xls'
     if IMPUTE_COL_NANS:
+        print(f'IMPUTE_COL_NANS: {IMPUTE_COL_NANS}')
         _nan_col_count = table.isnull().sum(axis = 0)
         _impute_where = (_nan_col_count > table.shape[0] * IMPUTE_COL_THRESHOLD)
         _cols = table.columns[_impute_where]
 
         table[_cols] = table[_cols].ffill()
+    
 
     if DROP_UNNAMED:
+        print(f'DROP_UNNAMED: {DROP_UNNAMED}')
         # this caused some issues because the columns are returned in an Index object which causes some weird things
         # specifically if you compare float/ints to str it returns a nan but is not a nantype so careful error catching must be implemented
         # this approach of converting to str() seems to bypass this
@@ -84,7 +96,10 @@ def preprocess_table(table):
             table.columns = table.iloc[0]
             table = table[1:]
             columns = table.columns.values
+        
+        # we remove the headers that are Unnamed XXX and look for the next available row to use as header name
         if BACKFILL_HEADERS:
+            print(f'BACKFILL_HEADERS: {BACKFILL_HEADERS}')
             # find which headers are nan
             _impute_where = table.columns.isnull()
             # find values of the next available entries
@@ -99,10 +114,19 @@ def preprocess_table(table):
 
     
     if FILL_NA:
+        print(f'FILL_NA: {FILL_NA}')
         table = table.fillna('')
         table = table.replace('-', '')
         table.columns = table.columns.fillna('-')
 
+    if IMPUTE_FIRST_COL_EMPTY:
+        print(f'IMPUTE_FIRST_COL_EMPTY: {IMPUTE_FIRST_COL_EMPTY}')
+        # find where empty entries appear, change to nan so we can forward fill with appropriate values, then save inplace
+        _impute_where = (table.iloc[:, 0] == '').values
+        table.iloc[_impute_where, 0] = np.nan
+        table.iloc[:, 0].ffill(inplace=True)
+
+    
     table = table.reset_index(drop = True)
 
 
@@ -131,15 +155,15 @@ def preprocess_table(table):
 
 if __name__ == '__main__':
 
-    filepath = 'datasets/businessindustryandtrade_itandinternetindustry_datasets_ictactivityofukbusinessesecommerceandictactivity.xls'
+    # filepath = 'datasets/businessindustryandtrade_itandinternetindustry_datasets_ictactivityofukbusinessesecommerceandictactivity.xls'
 
-    filepath = 'datasets/economy_environmentalaccounts_datasets_seminaturalhabitatsecosystemservices.xls'
+    # filepath = 'datasets/economy_environmentalaccounts_datasets_seminaturalhabitatsecosystemservices.xls'
 
     # filepath = 'datasets/businessindustryandtrade_itandinternetindustry_datasets_ictactivityofukbusinessesecommerceandictactivity.xls'
 
     # good example to see BACKFILL_HEADERS
     # sheet_name 3
-    filepath = 'datasets/employmentandlabourmarket_peopleinwork_labourproductivity_datasets_subregionalproductivitylabourproductivitygvaperhourworkedandgvaperfilledjobindicesbylocalenterprisepartnership.xls'
+    # filepath = 'datasets/employmentandlabourmarket_peopleinwork_labourproductivity_datasets_subregionalproductivitylabourproductivitygvaperhourworkedandgvaperfilledjobindicesbylocalenterprisepartnership.xls'
     # but this fails:
     # 'datasets/peoplepopulationandcommunity_wellbeing_datasets_measuringnationalwellbeingdomainsandmeasures.xls'
     
@@ -152,7 +176,13 @@ if __name__ == '__main__':
     df = table_data.parse(sheet_names[3])
     processed = preprocess_table(df)
 
-    test = linearize_table(df)
+    # test linearizer
+    # data = {'Actors': ["Brad Pitt", "Leonardo Di Caprio", "George Clooney"],
+    #     'Age': ["56", "45", "59"],
+    #     'Number of movies': ["87", "53", "69"]
+    # }
+    # table = pd.DataFrame.from_dict(data)
+    linear_table = linearize_table(processed)
     print('test')
     print('test')
     print('test')

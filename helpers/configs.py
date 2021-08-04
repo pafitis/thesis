@@ -100,3 +100,6 @@ FILL_NA = True
 
 # backfills headers after processing the column names; this is as sometimes there are headers at different levels. this tries to fix that
 BACKFILL_HEADERS = True
+
+# experimental; fills forward empty (" ") or NaN values in the first column in an attempt to fix tables that have multi-level headers
+IMPUTE_FIRST_COL_EMPTY = True
