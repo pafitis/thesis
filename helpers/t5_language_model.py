@@ -101,7 +101,7 @@ def run_t5(df, model, tokenizer, save_results, multi_token = False):
                 predicted_sentence, predicted_answer = _results[0]
 
             answer_true = cloze.answer_text
-            original_text = cloze.source_text
+            original_text = cloze.source_text.text
             row_result.append(
                 (predicted_answer, predicted_sentence, 
                 answer_true, original_text,
