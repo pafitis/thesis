@@ -77,7 +77,7 @@ def check_t5(model, tokenizer, sentence, num_beams = 100, num_return_sequences=1
 
 def run_t5(df, model, tokenizer, save_results, multi_token = False):
 
-    results = []
+    final_results = []
     entity_set = set()
 
     for row in tqdm(range(df.shape[0])):
@@ -108,7 +108,7 @@ def run_t5(df, model, tokenizer, save_results, multi_token = False):
                 row, cloze.cloze_id)
             )
 
-        results.append(row_result)
+        final_results.append(row_result)
 
     categories = [x[1] for x in list(entity_set)]
     # construct keys
@@ -124,7 +124,7 @@ def run_t5(df, model, tokenizer, save_results, multi_token = False):
         
         with open(
             f'results/{model_name}_{current_time}_results.json', 'w') as f:
-            json.dump(results, f)
+            json.dump(final_results, f)
         with open(
             f'results/{model_name}_{current_time}_entity_set.pickle', 'wb') as f:
             pickle.dump(entity_set, f)
@@ -132,7 +132,7 @@ def run_t5(df, model, tokenizer, save_results, multi_token = False):
             f'results/{model_name}_{current_time}_entity_dictionary.json', 'w') as f:
             json.dump(entities, f)
 
-    return results, entity_set, entities
+    return final_results, entity_set, entities
 
 
 
