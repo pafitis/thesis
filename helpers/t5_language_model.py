@@ -135,6 +135,37 @@ def run_t5(df, model, tokenizer, save_results, multi_token = False):
     return final_results, entity_set, entities
 
 
+def summarise_t5_results(results, verbose = True):
+    '''
+    computes EXACT MATCH from T5 results
+
+    expects input from run_t5 function from t5_language_model.py
+    results = [row1, row2, ..., rowN]
+        row_i = [entry1, entry2, ...]
+        entry_i = \
+            (answer_given, predicted_sentence, true_answer, true_sentence, row_id, cloze_id)
+    '''
+    count_correct, count_wrong = 0, 0
+    correct_preds, wrong_preds = [], []
+
+    for row in results:
+        if len(row):
+            for entry in row:
+                predicted, truth = entry[0], entry[2]
+                if predicted == truth:
+                    correct_preds.append(predicted)
+                    count_correct += 1
+                else:
+                    wrong_preds.append((predicted, truth))
+                    count_wrong += 1
+
+    if verbose:
+        print(f'Total Examples: {count_wrong + count_correct}')
+        print(f'Correct: {count_correct}, Incorrect: {count_wrong}')
+        print(f'Percentage Correct: {np.round( ((count_correct / (count_correct+ count_wrong) ) * 100), 3)}%')
+
+    return count_correct, count_wrong, correct_preds, wrong_preds
+
 
 if __name__ == '__main__':
     with open('pickles/dataset_20210625_184837.pkl', 'rb') as f:

@@ -6,3 +6,6 @@ RobertaForMaskedLM_20210719_234849_results -> results for model that picks best 
 RobertaForMaskedLM_20210714_192239_results -> results for model that predicts answer equal to tokenized length answer (leaks info)
 
 roberta_base_check_model_july2 -> single token results
+
+
+T5ForConditionalGeneration_20210805_025839_results -> single token no context T5
