@@ -147,18 +147,22 @@ if __name__ == '__main__':
     paragraphs = [paragraph1, paragraph2]
 
     import spacy
-    nlp = spacy.load('en_core_web_trf')
+    # nlp = spacy.load('en_core_web_trf')
     answer_generator = named_entity_answer_generator
-    clozes = [c for p in paragraphs \
-        for c in generate_clozes_from_point(p, answer_generator)]
+    # clozes = [c for p in paragraphs \
+    #     for c in generate_clozes_from_point(p, answer_generator)]
 
     # okay this is somewhat hacky
     # here I update a set() which will contain the unique
     # (entity, label) pairs found in our clozes
     # this will be useful (hopefully) later when
-    # we want to know more about different labels and their nature
-    entity_set = set()
-    [entity_set.add((x.answer_text, x.answer_type)) for x in clozes]
+    # # we want to know more about different labels and their nature
+    # entity_set = set()
+    # [entity_set.add((x.answer_text, x.answer_type)) for x in clozes]
 
-    print(clozes)
-    print(entity_set)
+    # print(clozes)
+    # print(entity_set)
+
+    text = 'London had both the highest business birth rate at 15.7%, and death rate at 13.1%.'
+
+    sav = [c for c in generate_clozes_from_point(text, answer_generator)]

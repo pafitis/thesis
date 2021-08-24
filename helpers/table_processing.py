@@ -2,7 +2,24 @@ import numpy as np
 import pandas as pd
 import os
 
-from helpers.configs import ROW_NAN_THRESHOLD, IMPUTE_COL_NANS, IMPUTE_COL_THRESHOLD, DROP_UNNAMED, FILL_NA, BACKFILL_HEADERS, IMPUTE_FIRST_COL_EMPTY
+from helpers.configs import ROW_NAN_THRESHOLD, IMPUTE_COL_NANS, IMPUTE_COL_THRESHOLD, DROP_UNNAMED, FILL_NA, BACKFILL_HEADERS, IMPUTE_FIRST_COL_EMPTY, IMPUTE_ALL_COL_EMPTY, LOST_COL_LEN_THRESHOLD, SPACY_MODEL
+
+import spacy, nltk
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+from helpers.cloze_generation import generate_clozes_from_point, named_entity_answer_generator as ne_answer_generator, noun_phrase_answer_generator as np_answer_generator
+
+# from nltk.corpus import stopwords
+
+
+def lemmatize(text, spacy_nlp, stopwords = []):
+    """Perform lemmatization and stopword removal in the clean text
+       Returns a list of lemmas
+    """
+    doc = spacy_nlp(text)
+    lemma_list = [str(tok.lemma_).lower() if tok.is_alpha and tok.text.lower() not in stopwords else tok.text for tok in doc
+                  ]
+    return ' '.join(lemma_list)
 
 def linearize_table(table, preprocess= True, include_all = False):
     '''
@@ -23,7 +40,7 @@ def linearize_table(table, preprocess= True, include_all = False):
         else:
             row_content = "; ".join(
                 [f"{k} is {v}" for k, v in zip(keys, vals) \
-                    if v not in ['', ' '] or k not in ['-']])
+                    if str(v) not in ['', ' ', 'nan', 'NaN'] and k not in ['-']])
         
         out_string.append(f"Row {row_num + 1}: {row_content}.")
 
@@ -42,11 +59,13 @@ def preprocess_table(table):
     
     
     returns processed table
+
+    notes: expects input table to have reset index
     '''
 
     if not isinstance(table, pd.DataFrame):
         table = pd.DataFrame(table)
-    
+    original_table = table
     # drop nan columns
     table = table.dropna(how = 'all', axis = 1)
     # drop nan rows
@@ -69,6 +88,18 @@ def preprocess_table(table):
         # I have thought about what happens when median == 0
         # it should be okay though as I am using a strict ineq
     )
+    # store what we lost in a meta_data list
+    # this looks at the data we ignore and try to infer the column headers if possible; this is mostly useful in multilevel headers
+    # we ignore potential headers that are more than LOST_COL_LEN_THRESHOLD which defaults at 100 chars
+    _first_index = table.index[0]
+    lost_content = original_table.iloc[:_first_index]
+    lost_content = lost_content.dropna(
+        how = 'all', axis = 0).astype(str).replace('nan', '')
+    lost_col_content = [x.strip() for x in lost_content.agg(' '.join, axis = 0).values]
+    lost_col_content = [x if len(x) < LOST_COL_LEN_THRESHOLD else '' for x in lost_col_content ]
+    # replace empty strings to nan so we can use ffill then replace back ugly but works
+    lost_col_content = pd.Series(
+        lost_col_content).replace('', np.nan).ffill().replace(np.nan, '')
 
     # this forward-imputes column values if they are > 0.9 * num_rows
     # this hopefully handles cases where values represent groups
@@ -90,6 +121,7 @@ def preprocess_table(table):
         # this approach of converting to str() seems to bypass this
         # I leave original solutions (which break in some scenarios) for future reference
         columns = table.columns.values
+        
         while any(['Unnamed' in str(x) for x in columns]):
         # while any(table.columns.dropna().str.contains('Unnamed')):
         # while any(table.columns.dropna().str.contains('Unnamed').dropna()):
@@ -125,13 +157,133 @@ def preprocess_table(table):
         _impute_where = (table.iloc[:, 0] == '').values
         table.iloc[_impute_where, 0] = np.nan
         table.iloc[:, 0].ffill(inplace=True)
+    if IMPUTE_ALL_COL_EMPTY:
+        print(f'IMPUTE_ALL_COL_EMPTY: {IMPUTE_ALL_COL_EMPTY}')
+        # _impute_where = (table.iloc[:, :] == '').values
+        # table.iloc[_impute_where] = np.nan
+        table.replace('', np.nan, inplace= True)
+        table.iloc[:, :].ffill(inplace=True)
 
     
     table = table.reset_index(drop = True)
-
-
+    # set new headers as the concatenation of lost content and header names, also strip whitespace
+    table.columns = [x.strip() for x in lost_col_content + ' ' + table.columns.values]
     return table
 
+def read_process_table(
+    path, data_root = 'datasets/', file_ext = '.xls', return_iterator = True):
+    # paths are saved as mainsection/subsection/../ but were saved as mainsection_subsection_...; hence we change the '/' to '_'
+    if '/' in path:
+        path = path.replace('/', '_')
+        if path[0] == '_':
+            path = path[1:]
+    
+    fullpath = data_root + path + file_ext
+    excel_file = pd.ExcelFile(fullpath)
+    sheet_names = excel_file.sheet_names
+
+    
+    if return_iterator:
+        return (preprocess_table(excel_file.parse(x)) for x in sheet_names)
+    else:
+        return [preprocess_table(excel_file.parse(x)) for x in sheet_names]
+
+
+def find_relevant_column_header(cloze, df, tfidf_vectorizer):
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError('Relevant column extraction failed: please provide pd.DataFrame')
+    
+    if not isinstance(tfidf_vectorizer, TfidfVectorizer):
+        raise TypeError('Please provide sklearn TF-IDF Vectorizer')
+    
+    
+    columns = df.columns.to_list()
+    _list = [cloze] + columns
+    X = tfidf_vectorizer.fit_transform(_list)
+
+    pairwise_matrix = (X * X.T).toarray()
+    similarities = pairwise_matrix[0][1:]
+
+    most_relevant = similarities.argmax()
+
+    if similarities[most_relevant] != 0.0:
+        return most_relevant, columns[most_relevant]
+    else:
+        return None
+
+def find_relevant_content(cloze, df, tfidf_vectorizer, 
+    spacy_nlp = None, stopwords = [], return_empty = False):
+
+    '''
+    spacy_nlp: pass spacy.load(model); if none lemmatization is not carried through
+    '''
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError('Relevant column extraction failed: please provide pd.DataFrame')
+    
+    if not isinstance(tfidf_vectorizer, TfidfVectorizer):
+        raise TypeError('Please provide sklearn TF-IDF Vectorizer')
+
+    columns = df.columns.to_list()
+    # unique contents of each column
+    # len(contents) = num_of_columns
+    # each element of contents = num_of_unique_column_elements
+    # we add cloze + header + column_contents 
+    contents = [
+        [cloze] + [col] + df.astype(str).iloc[:, i].unique().tolist() \
+        for i, col in enumerate(columns)] # use iloc instead of loc as sometimes colnames are not unique
+    
+    # construct list of spacy docs for each column
+    if spacy_nlp is not None:
+        contents = [
+            [lemmatize(x,spacy_nlp, stopwords) for x in col_contents] \
+                for col_contents in contents
+            ]
+
+
+    Xs = [tfidf_vectorizer.fit_transform(x) for x in contents]
+    pairwise_matrices = [(x * x.T).toarray()[0] for x in Xs] #slice [0] to get relations with cloze
+
+    
+    relevant_content = []
+    relevant_rows = set()
+    
+    for col_idx, column in enumerate(columns):
+        # find content that has non-zero tfidf with the cloze (also ignore 1.0 tfidf because thats with itself)
+        _relevant_content_ix = np.where(
+            (pairwise_matrices[col_idx][1:] != 0.0))[0]
+            # (pairwise_matrices[col_idx][1:] != 0.0) * \
+            #      (pairwise_matrices[col_idx][1:] != 1.0))
+
+        if len(_relevant_content_ix):
+            # find the column values that are related with the cloze
+            column_content = contents[col_idx][1:] # slice 1: to remove appended cloze
+            _relevant_content = [column_content[x] for x in _relevant_content_ix]
+            # store
+            relevant_content.append(_relevant_content)
+            # find the rows of the dataset that contain these values
+            _relevant_rows = [df.iloc[:, col_idx] == subitem for subitem in _relevant_content]
+
+            row_bools = np.where(np.sum(_relevant_rows, axis = 0))[0]
+            relevant_rows.update(row_bools)
+            # if len(_relevant_rows) == 3:
+            #     # we slice [1] because we pass a 2d list, and [1] represents the rows where value == True;
+            #     row_bools = np.where(_relevant_rows)[1]
+            #     relevant_rows.update(row_bools)
+
+    relevant_columns = [True if len(x) else False for x in relevant_content]
+    relevant_columns = np.where(relevant_columns)[0]
+    relevant_rows = np.array(list(relevant_rows))
+
+    cols = relevant_columns if len(relevant_columns) != 0 \
+        else [x for x in range(df.shape[1])]
+    rows = relevant_rows if len(relevant_rows) != 0 else df.index.tolist()
+    subdf = df.iloc[rows, cols].reset_index(drop = True)
+
+    if return_empty:
+       pass 
+    return subdf, rows, cols, relevant_rows, relevant_columns, pairwise_matrices, contents
+    
+    # return df.iloc[relevant_rows, relevant_columns], relevant_rows, relevant_columns
 
 
 
@@ -168,12 +320,15 @@ if __name__ == '__main__':
     # 'datasets/peoplepopulationandcommunity_wellbeing_datasets_measuringnationalwellbeingdomainsandmeasures.xls'
     
 
-    filepath = 'datasets/peoplepopulationandcommunity_wellbeing_datasets_measuringnationalwellbeingdomainsandmeasures.xls'
+    # filepath = 'datasets/peoplepopulationandcommunity_wellbeing_datasets_measuringnationalwellbeingdomainsandmeasures.xls'
+
+    filepath = 'datasets/businessindustryandtrade_business_businessservices_datasets_uknonfinancialbusinesseconomyannualbusinesssurveyrevisionsandchangeonpreviousyear.xls'
     
     table_data = pd.ExcelFile(filepath)
     sheet_names = table_data.sheet_names
 
-    df = table_data.parse(sheet_names[3])
+    df = table_data.parse(sheet_names[2])
+    # df = table_data.parse(sheet_names[1])
     processed = preprocess_table(df)
 
     # test linearizer

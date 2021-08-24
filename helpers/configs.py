@@ -103,3 +103,9 @@ BACKFILL_HEADERS = True
 
 # experimental; fills forward empty (" ") or NaN values in the first column in an attempt to fix tables that have multi-level headers
 IMPUTE_FIRST_COL_EMPTY = True
+
+# experimental; fill fowrard empty (" ") or NaN values in all columns
+IMPUTE_ALL_COL_EMPTY = True
+
+# the number of characters we allow for lost column headers, anything more than this is replaced with an empty string
+LOST_COL_LEN_THRESHOLD = 100
