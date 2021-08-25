@@ -27,7 +27,7 @@ import torch
 
 #     for sent in sentence_list:
 
-def check_t5(model, tokenizer, sentence, num_beams = 100, num_return_sequences=1):
+def check_t5(model, tokenizer, sentence, num_beams = 100, num_return_sequences=1, max_length = 5):
 
     def replace_mask(
         sentence,
@@ -58,7 +58,7 @@ def check_t5(model, tokenizer, sentence, num_beams = 100, num_return_sequences=1
         input_ids = tokenizer.encode_plus(
             sent, add_special_tokens = True, return_tensors = 'pt').input_ids.to(device)
         outputs = model.generate(
-            input_ids=input_ids, num_beams=num_beams, num_return_sequences=num_return_sequences)
+            input_ids=input_ids, num_beams=num_beams, num_return_sequences=num_return_sequences, max_length = max_length)
         
 
         _0_index = sent.index('<extra_id_0>')
