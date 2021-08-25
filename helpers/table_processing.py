@@ -65,9 +65,10 @@ def preprocess_table(table):
 
     if not isinstance(table, pd.DataFrame):
         table = pd.DataFrame(table)
-    original_table = table
     # drop nan columns
     table = table.dropna(how = 'all', axis = 1)
+    # store a version of "original" table. not original since we drop columns, but these are all empty so should be okay. reason I do this here and not before dropping is that there are issues with matching lost columns later on
+    original_table = table
     # drop nan rows
     table = table.dropna(how = 'all', axis = 0)
     
@@ -322,14 +323,18 @@ if __name__ == '__main__':
 
     # filepath = 'datasets/peoplepopulationandcommunity_wellbeing_datasets_measuringnationalwellbeingdomainsandmeasures.xls'
 
-    filepath = 'datasets/businessindustryandtrade_business_businessservices_datasets_uknonfinancialbusinesseconomyannualbusinesssurveyrevisionsandchangeonpreviousyear.xls'
+    # filepath = 'datasets/businessindustryandtrade_business_businessservices_datasets_uknonfinancialbusinesseconomyannualbusinesssurveyrevisionsandchangeonpreviousyear.xls'
     
-    table_data = pd.ExcelFile(filepath)
-    sheet_names = table_data.sheet_names
+    # table_data = pd.ExcelFile(filepath)
+    # sheet_names = table_data.sheet_names
 
-    df = table_data.parse(sheet_names[2])
-    # df = table_data.parse(sheet_names[1])
-    processed = preprocess_table(df)
+    # df = table_data.parse(sheet_names[2])
+    # # df = table_data.parse(sheet_names[1])
+    # processed = preprocess_table(df)
+
+    path = '/businessindustryandtrade/business/businessservices/datasets/uknonfinancialbusinesseconomyannualbusinesssurveyregionalresultsqualitymeasures'
+    test = pd.ExcelFile('datasets/' + path.replace('/', '_')[1:]+ '.xls')
+    preprocess_table(test.parse('Section-Division by Region'))
 
     # test linearizer
     # data = {'Actors': ["Brad Pitt", "Leonardo Di Caprio", "George Clooney"],
