@@ -224,11 +224,13 @@ def run_language_model(
             answer_true = cloze.answer_text
 
             # saves prediction, confidence score, truth, dataframe row, cloze id
-            row_result.append(
-                (answer_confidence, answer_perplexity, answer_true, row, cloze.cloze_id)
-            )
-            # row_result.append(
-            #     (answer_given, confidence, answer_true, row, cloze.cloze_id))
+            if multi_token:
+                row_result.append(
+                    (answer_confidence, answer_perplexity, answer_true, row, cloze.cloze_id)
+                )
+            else:
+                row_result.append(
+                    (answer_given, confidence, answer_true, row, cloze.cloze_id))
 
         results.append(row_result)
 
@@ -296,10 +298,10 @@ def summarise_results(results, includes_perplexity = False, verbose = True):
                     confidence_results = entry[0]
                     perplexity_results = entry[1]
 
-                    truth = entry[2]
+                    truth = entry[2].lower()
 
-                    conf_answer = confidence_results[0]
-                    perp_answer = perplexity_results[0]
+                    conf_answer = confidence_results[0].lower()
+                    perp_answer = perplexity_results[0].lower()
                     # remove whitespace
                     for ans in [conf_answer, perp_answer]:
                         if ans[0] == ' ':
@@ -325,14 +327,16 @@ def summarise_results(results, includes_perplexity = False, verbose = True):
                 else:    
                     # the way the mask LM works it includes a whitespace
                     # whereas our mask does not; this fixes that in the accuracy metrics
-                    if entry[0][0] == ' ':
-                        entry[0] = entry[0][1:]
-                    if entry[0] == entry[2]:
+                    guess = entry[0].lower()
+                    truth = entry[2].lower()
+                    if guess[0] == ' ':
+                        guess = guess[1:]
+                    if guess == truth:
                         count_correct += 1
-                        correct_preds.append(entry[0])
+                        correct_preds.append(guess)
                     else:
                         count_wrong += 1
-                        wrong_preds.append((entry[0], entry[2]))
+                        wrong_preds.append((guess, truth))
     if verbose:
         print(f'Total Examples: {count_wrong + count_correct}')
         print(f'Correct: {count_correct}, Incorrect: {count_wrong}')
