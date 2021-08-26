@@ -100,7 +100,7 @@ def preprocess_table(table):
     lost_col_content = [x if len(x) < LOST_COL_LEN_THRESHOLD else '' for x in lost_col_content ]
     # replace empty strings to nan so we can use ffill then replace back ugly but works
     lost_col_content = pd.Series(
-        lost_col_content).replace('', np.nan).ffill().replace(np.nan, '')
+        lost_col_content).replace('', np.nan).ffill().replace(np.nan, '').astype('string')
 
     # this forward-imputes column values if they are > 0.9 * num_rows
     # this hopefully handles cases where values represent groups
@@ -168,7 +168,8 @@ def preprocess_table(table):
     
     table = table.reset_index(drop = True)
     # set new headers as the concatenation of lost content and header names, also strip whitespace
-    table.columns = [x.strip() for x in lost_col_content + ' ' + table.columns.values]
+    table.columns = [x.strip() \
+        for x in lost_col_content + ' ' + table.columns.values.astype(str)]
     return table
 
 def read_process_table(
