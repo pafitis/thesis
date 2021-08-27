@@ -46,7 +46,7 @@ def linearize_table(table, preprocess= True, include_all = False):
 
     return ' '.join(out_string)
 
-def preprocess_table(table):
+def preprocess_table(table, verbose = False):
     '''
     preprocess table
 
@@ -65,12 +65,17 @@ def preprocess_table(table):
 
     if not isinstance(table, pd.DataFrame):
         table = pd.DataFrame(table)
+    if table.shape == (0,0):
+        return
     # drop nan columns
     table = table.dropna(how = 'all', axis = 1)
     # store a version of "original" table. not original since we drop columns, but these are all empty so should be okay. reason I do this here and not before dropping is that there are issues with matching lost columns later on
     original_table = table
     # drop nan rows
     table = table.dropna(how = 'all', axis = 0)
+
+    if table.shape[0] < 3 or table.shape[1] < 3:
+        return
     
     # count nans in rows and drop those rows/cols that are 1.5x the median
     # count, construct threshold, find indeces above threshold, drop
@@ -107,7 +112,8 @@ def preprocess_table(table):
     # and we want to repeatedly impute it for our LM
     # see: 'datasets/businessindustryandtrade_itandinternetindustry_datasets_ictactivityofukbusinessesecommerceandictactivity.xls'
     if IMPUTE_COL_NANS:
-        print(f'IMPUTE_COL_NANS: {IMPUTE_COL_NANS}')
+        if verbose:
+            print(f'IMPUTE_COL_NANS: {IMPUTE_COL_NANS}')
         _nan_col_count = table.isnull().sum(axis = 0)
         _impute_where = (_nan_col_count > table.shape[0] * IMPUTE_COL_THRESHOLD)
         _cols = table.columns[_impute_where]
@@ -116,7 +122,8 @@ def preprocess_table(table):
     
 
     if DROP_UNNAMED:
-        print(f'DROP_UNNAMED: {DROP_UNNAMED}')
+        if verbose:
+            print(f'DROP_UNNAMED: {DROP_UNNAMED}')
         # this caused some issues because the columns are returned in an Index object which causes some weird things
         # specifically if you compare float/ints to str it returns a nan but is not a nantype so careful error catching must be implemented
         # this approach of converting to str() seems to bypass this
@@ -132,7 +139,8 @@ def preprocess_table(table):
         
         # we remove the headers that are Unnamed XXX and look for the next available row to use as header name
         if BACKFILL_HEADERS:
-            print(f'BACKFILL_HEADERS: {BACKFILL_HEADERS}')
+            if verbose:
+                print(f'BACKFILL_HEADERS: {BACKFILL_HEADERS}')
             # find which headers are nan
             _impute_where = table.columns.isnull()
             # find values of the next available entries
@@ -147,19 +155,23 @@ def preprocess_table(table):
 
     
     if FILL_NA:
-        print(f'FILL_NA: {FILL_NA}')
+        if verbose:
+            print(f'FILL_NA: {FILL_NA}')
         table = table.fillna('')
         table = table.replace('-', '')
         table.columns = table.columns.fillna('-')
 
     if IMPUTE_FIRST_COL_EMPTY:
-        print(f'IMPUTE_FIRST_COL_EMPTY: {IMPUTE_FIRST_COL_EMPTY}')
+        if verbose:
+            print(f'IMPUTE_FIRST_COL_EMPTY: {IMPUTE_FIRST_COL_EMPTY}')
         # find where empty entries appear, change to nan so we can forward fill with appropriate values, then save inplace
         _impute_where = (table.iloc[:, 0] == '').values
+        _impute_where[0] = False # change first to false as this raises issues there is nothing to forward fill with
         table.iloc[_impute_where, 0] = np.nan
         table.iloc[:, 0].ffill(inplace=True)
     if IMPUTE_ALL_COL_EMPTY:
-        print(f'IMPUTE_ALL_COL_EMPTY: {IMPUTE_ALL_COL_EMPTY}')
+        if verbose:
+            print(f'IMPUTE_ALL_COL_EMPTY: {IMPUTE_ALL_COL_EMPTY}')
         # _impute_where = (table.iloc[:, :] == '').values
         # table.iloc[_impute_where] = np.nan
         table.replace('', np.nan, inplace= True)
@@ -333,9 +345,12 @@ if __name__ == '__main__':
     # # df = table_data.parse(sheet_names[1])
     # processed = preprocess_table(df)
 
-    path = '/businessindustryandtrade/business/businessservices/datasets/uknonfinancialbusinesseconomyannualbusinesssurveyregionalresultsqualitymeasures'
+    # path = '/businessindustryandtrade/changestobusiness/mergersandacquisitions/datasets/mergersandacquisitionsinvolvingukcompanies'
+
+    path = '/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/standardofproofsuicidedata'
+
     test = pd.ExcelFile('datasets/' + path.replace('/', '_')[1:]+ '.xls')
-    preprocess_table(test.parse('Section-Division by Region'))
+    preprocess_table(test.parse('Table Interpretation'))
 
     # test linearizer
     # data = {'Actors': ["Brad Pitt", "Leonardo Di Caprio", "George Clooney"],
