@@ -347,10 +347,10 @@ if __name__ == '__main__':
 
     # path = '/businessindustryandtrade/changestobusiness/mergersandacquisitions/datasets/mergersandacquisitionsinvolvingukcompanies'
 
-    path = '/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/standardofproofsuicidedata'
+    # path = '/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/standardofproofsuicidedata'
 
-    test = pd.ExcelFile('datasets/' + path.replace('/', '_')[1:]+ '.xls')
-    preprocess_table(test.parse('Table Interpretation'))
+    # test = pd.ExcelFile('datasets/' + path.replace('/', '_')[1:]+ '.xls')
+    # preprocess_table(test.parse('Table Interpretation'))
 
     # test linearizer
     # data = {'Actors': ["Brad Pitt", "Leonardo Di Caprio", "George Clooney"],
@@ -358,7 +358,41 @@ if __name__ == '__main__':
     #     'Number of movies': ["87", "53", "69"]
     # }
     # table = pd.DataFrame.from_dict(data)
-    linear_table = linearize_table(processed)
+    # linear_table = linearize_table(processed)
     print('test')
     print('test')
     print('test')
+
+    import torch
+    import pandas as pd
+    import numpy as np
+    import pickle, logging, spacy, sys, os, json, requests
+    import matplotlib.pyplot as plt
+
+    from helpers.classes import Collection
+    from tqdm import tqdm
+    from bs4 import BeautifulSoup
+    from datetime import datetime
+
+    import spacy
+    nlp = spacy.load('en_core_web_trf')
+
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    # vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(ngram_range=(2,3))
+
+    import nltk
+    stopwords = set(nltk.corpus.stopwords.words('english'))
+
+
+    df = pd.read_pickle('pickles/dataset_20210625_184837.pkl')
+    clozes_df = pd.read_json('pickles/clozes_20210807_165700.json')
+    _cloze = clozes_df.iloc[20].source_text
+    _table = clozes_df[clozes_df['source_text'] == _cloze]
+    _relevant_dfs = _table.data.values[0]
+
+    df_iterator = read_process_table(_relevant_dfs[1])
+    table = next(df_iterator)
+    table = next(df_iterator)
+
+    subdf, rows, cols, relevant_rows, relevant_columns, pairwise_matrices, contents = find_relevant_content(_cloze, table, vectorizer, nlp, stopwords, return_empty = False) 
