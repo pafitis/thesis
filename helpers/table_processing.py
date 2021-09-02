@@ -17,7 +17,8 @@ def lemmatize(text, spacy_nlp, stopwords = []):
        Returns a list of lemmas
     """
     doc = spacy_nlp(text)
-    lemma_list = [str(tok.lemma_).lower() if tok.is_alpha and tok.text.lower() not in stopwords else tok.text for tok in doc
+    lemma_list = [str(tok.lemma_).lower() \
+        if tok.is_alpha and tok.text.lower() not in stopwords else tok.text for tok in doc
                   ]
     return ' '.join(lemma_list)
 
@@ -69,10 +70,10 @@ def preprocess_table(table, verbose = False):
         return
     # drop nan columns
     table = table.dropna(how = 'all', axis = 1)
-    # store a version of "original" table. not original since we drop columns, but these are all empty so should be okay. reason I do this here and not before dropping is that there are issues with matching lost columns later on
-    original_table = table
     # drop nan rows
     table = table.dropna(how = 'all', axis = 0)
+    # store a version of "original" table. not original since we drop columns, but these are all empty so should be okay. reason I do this here and not before dropping is that there are issues with matching lost columns later on
+    original_table = table
 
     if table.shape[0] < 3 or table.shape[1] < 3:
         return
@@ -99,10 +100,14 @@ def preprocess_table(table, verbose = False):
     # we ignore potential headers that are more than LOST_COL_LEN_THRESHOLD which defaults at 100 chars
     _first_index = table.index[0]
     lost_content = original_table.iloc[:_first_index]
-    lost_content = lost_content.dropna(
-        how = 'all', axis = 0).astype(str).replace('nan', '')
+    lost_content = lost_content.dropna(how = 'all', axis = 0) # drop empty rows
+    lost_content = lost_content.apply(lambda x: x.ffill(), axis = 1) # forward fill for multi head
+    lost_content = lost_content.astype(str).replace('nan', '') # convert nans to empty string
+    # lost_content = lost_content.dropna(
+    #     how = 'all', axis = 0).astype(str).replace('nan', '')
     lost_col_content = [x.strip() for x in lost_content.agg(' '.join, axis = 0).values]
-    lost_col_content = [x if len(x) < LOST_COL_LEN_THRESHOLD else '' for x in lost_col_content ]
+    lost_col_content = [x if len(x) < LOST_COL_LEN_THRESHOLD else '' \
+        for x in lost_col_content ]
     # replace empty strings to nan so we can use ffill then replace back ugly but works
     lost_col_content = pd.Series(
         lost_col_content).replace('', np.nan).ffill().replace(np.nan, '').astype('string')
@@ -349,8 +354,9 @@ if __name__ == '__main__':
 
     # path = '/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/standardofproofsuicidedata'
 
-    # test = pd.ExcelFile('datasets/' + path.replace('/', '_')[1:]+ '.xls')
-    # preprocess_table(test.parse('Table Interpretation'))
+    path = 'peoplepopulationandcommunity_birthsdeathsandmarriages_deaths_datasets_standardofproofsuicidedata'
+    test = pd.ExcelFile('datasets/' + path+ '.xls')
+    preprocess_table(test.parse('Table 1'))
 
     # test linearizer
     # data = {'Actors': ["Brad Pitt", "Leonardo Di Caprio", "George Clooney"],
@@ -359,40 +365,3 @@ if __name__ == '__main__':
     # }
     # table = pd.DataFrame.from_dict(data)
     # linear_table = linearize_table(processed)
-    print('test')
-    print('test')
-    print('test')
-
-    import torch
-    import pandas as pd
-    import numpy as np
-    import pickle, logging, spacy, sys, os, json, requests
-    import matplotlib.pyplot as plt
-
-    from helpers.classes import Collection
-    from tqdm import tqdm
-    from bs4 import BeautifulSoup
-    from datetime import datetime
-
-    import spacy
-    nlp = spacy.load('en_core_web_trf')
-
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    # vectorizer = TfidfVectorizer()
-    vectorizer = TfidfVectorizer(ngram_range=(2,3))
-
-    import nltk
-    stopwords = set(nltk.corpus.stopwords.words('english'))
-
-
-    df = pd.read_pickle('pickles/dataset_20210625_184837.pkl')
-    clozes_df = pd.read_json('pickles/clozes_20210807_165700.json')
-    _cloze = clozes_df.iloc[20].source_text
-    _table = clozes_df[clozes_df['source_text'] == _cloze]
-    _relevant_dfs = _table.data.values[0]
-
-    df_iterator = read_process_table(_relevant_dfs[1])
-    table = next(df_iterator)
-    table = next(df_iterator)
-
-    subdf, rows, cols, relevant_rows, relevant_columns, pairwise_matrices, contents = find_relevant_content(_cloze, table, vectorizer, nlp, stopwords, return_empty = False) 
