@@ -70,10 +70,10 @@ def preprocess_table(table, verbose = False):
         return
     # drop nan columns
     table = table.dropna(how = 'all', axis = 1)
+    # store a version of "original" table. not original since we drop columns, but these are all empty so should be okay. reason I do this here and not before dropping is that there are issues with matching lost columns later on. We need to copy before rows are dropped due to indexing issues too, some were doubly appended.
+    original_table = table
     # drop nan rows
     table = table.dropna(how = 'all', axis = 0)
-    # store a version of "original" table. not original since we drop columns, but these are all empty so should be okay. reason I do this here and not before dropping is that there are issues with matching lost columns later on
-    original_table = table
 
     if table.shape[0] < 3 or table.shape[1] < 3:
         return
