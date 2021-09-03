@@ -187,7 +187,7 @@ def preprocess_table(table, verbose = False):
     # set new headers as the concatenation of lost content and header names, also strip whitespace
     table.columns = [x.strip() \
         for x in lost_col_content + ' ' + table.columns.values.astype(str)]
-    return table
+    return table.astype(str)
 
 def read_process_table(
     path, data_root = 'datasets/', file_ext = '.xls', return_iterator = True):
