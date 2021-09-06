@@ -101,6 +101,12 @@ def preprocess_table(table, verbose = False):
     _first_index = table.index[0]
     lost_content = original_table.iloc[:_first_index]
     lost_content = lost_content.dropna(how = 'all', axis = 0) # drop empty rows
+
+    # this tries to remove rows that are mostly empty but only have 1-2 values that are not. these types of rows are usually an issue. they are often the first cell or first two cells that have comments and need to be removed. finds the rows that have less nans than the median value
+    nums_of_nans_in_lost = lost_content.apply(lambda x: x.isna().sum(), axis = 1).values
+    which_are_less = (nums_of_nans_in_lost < np.median(nums_of_nans_in_lost)) | \
+        (nums_of_nans_in_lost < (lost_content.shape[1] - 1))
+    lost_content = lost_content[which_are_less]
     lost_content = lost_content.apply(lambda x: x.ffill(), axis = 1) # forward fill for multi head
     lost_content = lost_content.astype(str).replace('nan', '') # convert nans to empty string
     # lost_content = lost_content.dropna(
@@ -354,9 +360,10 @@ if __name__ == '__main__':
 
     # path = '/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/standardofproofsuicidedata'
 
-    path = 'peoplepopulationandcommunity_birthsdeathsandmarriages_deaths_datasets_standardofproofsuicidedata'
+    path = 'businessindustryandtrade_business_businessservices_datasets_uknonfinancialbusinesseconomyannualbusinesssurveyrevisionsandchangeonpreviousyear'
+
     test = pd.ExcelFile('datasets/' + path+ '.xls')
-    preprocess_table(test.parse('Table 1'))
+    preprocess_table(test.parse('ABS Revisions to Data'))
 
     # test linearizer
     # data = {'Actors': ["Brad Pitt", "Leonardo Di Caprio", "George Clooney"],
