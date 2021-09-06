@@ -232,8 +232,9 @@ def find_relevant_column_header(cloze, df, tfidf_vectorizer, top_k = 5):
     # reverse array so we return top_k most relevant
     most_relevant = (-similarities).argsort()[:top_k]
 
-    if similarities[most_relevant] != 0.0:
-        return most_relevant, columns[most_relevant]
+    non_zero_similarities = most_relevant[similarities[most_relevant] != 0.0]
+    if len(non_zero_similarities):
+        return [(x, columns[x]) for x in non_zero_similarities]
     else:
         return None
 
