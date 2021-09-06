@@ -214,7 +214,7 @@ def read_process_table(
         return [preprocess_table(excel_file.parse(x)) for x in sheet_names]
 
 
-def find_relevant_column_header(cloze, df, tfidf_vectorizer):
+def find_relevant_column_header(cloze, df, tfidf_vectorizer, top_k = 5):
     if not isinstance(df, pd.DataFrame):
         raise TypeError('Relevant column extraction failed: please provide pd.DataFrame')
     
@@ -229,7 +229,8 @@ def find_relevant_column_header(cloze, df, tfidf_vectorizer):
     pairwise_matrix = (X * X.T).toarray()
     similarities = pairwise_matrix[0][1:]
 
-    most_relevant = similarities.argmax()
+    # reverse array so we return top_k most relevant
+    most_relevant = (-similarities).argsort()[:top_k]
 
     if similarities[most_relevant] != 0.0:
         return most_relevant, columns[most_relevant]
