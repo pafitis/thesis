@@ -44,8 +44,8 @@ def linearize_table(
             # cleanup entries
             row_content = "; ".join(
                 [f"{k} is {v}" for k, v in zip(keys, vals) \
-                    if str(v) not in ['', ' ', 'nan', 'NaN', '-', ':','*', ';'] and \
-                        k not in ['', ' ', 'nan', 'NaN', '-', ':','*', ';']])
+                    if str(v) not in ['', ' ', 'nan', 'NaN', '-', ':','*', ';', '%'] and \
+                        k not in ['', ' ', 'nan', 'NaN', '-', ':','*', ';', '%']])
         
         # remove \n artifacts
         row_content = row_content.replace('\n', '')
