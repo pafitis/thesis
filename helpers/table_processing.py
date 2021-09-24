@@ -22,7 +22,9 @@ def lemmatize(text, spacy_nlp, stopwords = []):
                   ]
     return ' '.join(lemma_list)
 
-def linearize_table(table, preprocess= True, include_all = False):
+def linearize_table(
+    table, preprocess= True,
+    include_all = False, add_SEP=True):
     '''
     outputs a pandas-read excel file (.xls/.xlsx)
     in linear format for use in LM models
@@ -39,11 +41,18 @@ def linearize_table(table, preprocess= True, include_all = False):
         if include_all:
             row_content = "; ".join([f"{k} is {v}" for k, v in zip(keys, vals)])
         else:
+            # cleanup entries
             row_content = "; ".join(
                 [f"{k} is {v}" for k, v in zip(keys, vals) \
-                    if str(v) not in ['', ' ', 'nan', 'NaN'] and k not in ['-']])
+                    if str(v) not in ['', ' ', 'nan', 'NaN', '-', ':','*', ';'] and \
+                        k not in ['', ' ', 'nan', 'NaN', '-', ':','*', ';']])
         
-        out_string.append(f"Row {row_num + 1}: {row_content}.")
+        # remove \n artifacts
+        row_content = row_content.replace('\n', '')
+        if add_SEP:
+            out_string.append(f" [SEP] Row {row_num + 1}: {row_content}.")
+        else:
+            out_string.append(f" Row {row_num + 1}: {row_content}.")
 
     return ' '.join(out_string)
 
@@ -179,7 +188,7 @@ def preprocess_table(table, verbose = False):
         _impute_where = (table.iloc[:, 0] == '').values
         _impute_where[0] = False # change first to false as this raises issues there is nothing to forward fill with
         table.iloc[_impute_where, 0] = np.nan
-        table.iloc[:, 0].ffill(inplace=True)
+        table.iloc[:, 0] = table.iloc[:, 0].ffill()
     if IMPUTE_ALL_COL_EMPTY:
         if verbose:
             print(f'IMPUTE_ALL_COL_EMPTY: {IMPUTE_ALL_COL_EMPTY}')
@@ -289,7 +298,8 @@ def find_relevant_content(cloze, df, tfidf_vectorizer,
             # store
             relevant_content.append(_relevant_content)
             # find the rows of the dataset that contain these values
-            _relevant_rows = [df.iloc[:, col_idx] == subitem for subitem in _relevant_content]
+            _relevant_rows = [df.iloc[:, col_idx] == subitem \
+                for subitem in _relevant_content]
 
             row_bools = np.where(np.sum(_relevant_rows, axis = 0))[0]
             relevant_rows.update(row_bools)
@@ -365,9 +375,16 @@ if __name__ == '__main__':
 
     path = 'businessindustryandtrade_business_businessservices_datasets_uknonfinancialbusinesseconomyannualbusinesssurveyrevisionsandchangeonpreviousyear'
 
-    test = pd.ExcelFile('datasets/' + path+ '.xls')
-    preprocess_table(test.parse('ABS Revisions to Data'))
+    # path = \
+    #     'peoplepopulationandcommunity_healthandsocialcare_healthandlifeexpectancies_datasets_adultsmokinghabitsinengland'
 
+    # path = 'businessindustryandtrade_business_businessservices_datasets_uknonfinancialbusinesseconomyannualbusinesssurveyregionalresultsqualitymeasures'
+
+    path = 'peoplepopulationandcommunity_crimeandjustice_datasets_drugmisuseinenglandandwalesappendixtable'
+    test = pd.ExcelFile('datasets/' + path + '.xls')
+    sheet_names = test.sheet_names
+    table = preprocess_table(test.parse(sheet_names[2]))
+    linearize_table(table)
     # test linearizer
     # data = {'Actors': ["Brad Pitt", "Leonardo Di Caprio", "George Clooney"],
     #     'Age': ["56", "45", "59"],

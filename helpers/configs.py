@@ -89,7 +89,7 @@ ROW_NAN_THRESHOLD = 1.5
 # if columns should be forward-filled to impute
 # nan values. usefull for columns that are labels for groups
 IMPUTE_COL_NANS = True
-IMPUTE_COL_THRESHOLD = 0.9 # threshold to determine if to be imputed
+IMPUTE_COL_THRESHOLD = 0.85 # threshold to determine if to be imputed
 
 # hacky way to understand which entries are actual column headers
 # we drop until we find non-"Unnamed" entries

@@ -1,0 +1,72 @@
+1
+Cloze: The ASMR due to IHDs in TEMPORALMASK was significantly lower in England than Wales (94.7 and 109.3 deaths per 100,000 people respectively).
+__Answer: 2019++
+Cloze: The fall in production was driven by decreases of NUMERICMASK in mining and quarrying, 0.3% in manufacturing, and 0.9% in water supply and sewerage; these were offset partially by a rise in electricity and gas of 0.5%.
+__Answer: 15.0%++
+Cloze: The police recorded 18,706 cruelty to children/young persons offences in PLACEMASK and Wales in the year ending March 2019; however, some of these offences will be child physical abuse rather than neglect.
+__Answer: England++
+
+2
+Cloze: At birth, males in Wokingham could expect to live 15.5 years longer in “Good” health than males in Blackpool (TEMPORALMASK compared with 55.0 years).
+__Answer: 70.5 years++
+Cloze: In 2017, the removal of air pollution by urban green and blue space in PLACEMASK equated to a saving of £162.6 million in associated health costs.
+__Answer: Great Britain++
+Cloze: The average age of first-time mothers increased to 28.8 years in 2016, from TEMPORALMASK in 2015.
+__Answer: 28.6 years++
+
+3
+Cloze: Of those adults who have a smartphone for private use, 17% did not have security on their smartphone and NUMERICMASK did not know whether they had security.
+__Answer: a further 32%++
+Cloze: There was a statistically significant slowdown in the long-term improvement in age-standardised mortality rates for both England and Wales (TEMPORALMASK) around the early 2010s, in line with previous analysis.
+__Answer: 1990 to 2018++
+Cloze: In March 2021 (Round 4), 21.52% of primary school staff (95% confidence intervals: 17.54% to 25.94%) and 18.66% of secondary school staff (95% confidence intervals: NUMERICMASK) tested positive to SARS-CoV-2 antibodies.
+__Answer: 16.47% to 21.00%++
+
+4
+Cloze: TEMPORALMASK, the growth in employment in high street pubs and bars was three percentage points higher than in pubs and bars in non-high street locations.
+__Answer: Between 2015 and 2018++
+Cloze: For 16 of the 24 cancers, 1-year survival for patients diagnosed TEMPORALMASK was slightly higher than for the overlapping period 2009 to 2013 in at least 1 of the sexes.
+__Answer: between 2010 and 2014++
+Cloze: 26% of adults reported that they would have insufficient means to last TEMPORALMASK, and 10% longer than a week if they lost their main source of income.
+__Answer: longer than a month++
+
+5
+Cloze: The year ending March 2020 Crime Survey for England and Wales (CSEW) estimated that 1.6 million adults aged 16 to 74 years had experienced sexual assault by rape or penetration (including attempts) since TEMPORALMASK.
+__Answer: the age of 16 years++
+Cloze: Amphetamine use in the last year in adults aged 16 to 59 years fell by 42% compared with the previous year (to 109,000 people), continuing the long-term decline since TEMPORALMASK.
+__Answer: the year ending December 1995++
+Cloze: 61% of adults said that they had not, in the previous year, run out of money before TEMPORALMASK or month, up from 52% in July 2010 to June 2012.
+__Answer: the end of the week++
+
+6
+Cloze: There has been no significant change in the prevalence of sexual assault measured by the CSEW TEMPORALMASK (2.6%) and the year ending March 2017 (2.0%) surveys.
+__Answer: between the year ending March 2005++
+Cloze: More than half of respondents (57%) had downloaded the NHS Test and Trace app, which was a significant increase from 45% TEMPORALMASK.
+__Answer: between 19 and 24 April 2021++
+Cloze: In TEMPORALMASK, disabled women were almost twice as likely to have experienced any sexual assault in the last year (5.7%) than non-disabled women (3.0%).
+__Answer: the three years ending March 2018++
+
+7
+Cloze: The latest figures from IDENTITYMASK show little change in the prevalence of domestic abuse in recent years.
+__Answer: the Crime Survey for England and Wales++
+Cloze: This proportion has been gradually increasing since mid-February (44% in TEMPORALMASK).
+__Answer: the period 10 to 14 February 2021++
+Cloze: There were 50,335 deaths involving the coronavirus (COVID-19) that occurred TEMPORALMASK, registered up to 4 July 2020 in England and Wales; of these, 46,736 had COVID-19 assigned as the underlying cause of death.
+__Answer: between 1 March and 30 June 2020++
+
+8
+Cloze: From year ending Quarter 2 (Apr to June) 2010 to TEMPORALMASK, median house prices increased by over 20% in 26 towns and cities, all located in the south of England.
+__Answer: year ending Quarter 2 (Apr to June) 2015++
+Cloze: From TEMPORALMASK to year ending Quarter 2 (Apr to June) 2015, median house prices increased by over 20% in 26 towns and cities, all located in the south of England.
+__Answer: year ending Quarter 2 (Apr to June) 2010++
+Cloze: Sales of flats in the towns and cities rose from 18.3% in TEMPORALMASK to 30.5% in year ending Quarter 2 (Apr to June) 2015 as a proportion of all residential property sales.
+__Answer: year ending Quarter 4 (Oct to Dec) 1995++
+
+9
+Cloze: In England, people identifying as Muslim, Hindu, Sikh, or Jewish had higher age-standardised mortality rates (ASMRs) for deaths involving coronavirus (COVID-19) than those identifying as Christian in TEMPORALMASK.
+__Answer: the period 24 January 2020 to 28 February 2021++
+Cloze: General government gross debt was £1,601.3 billion at TEMPORALMASK (87.5% of GDP), an increase of £79.9 billion compared with the end of the financial year ending March 2014
+__Answer: the end of the financial year ending March 2015++
+Cloze: General government gross debt was £1,601.3 billion at the end of the financial year ending March 2015 (87.5% of GDP), an increase of £79.9 billion compared with TEMPORALMASK
+__Answer: the end of the financial year ending March 2014++
+
