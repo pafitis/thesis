@@ -1,8 +1,6 @@
-.ipynb_checkpoints
 models
 datasets
 .DS_Store
 __pycache__
 .vscode
-*/.ipynb_checkpoints/*
 .ipynb_checkpoints
