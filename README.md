@@ -2,8 +2,8 @@
 
 Code to accompany UCL CSML thesis. Work done while at the UCL NLP group. Received a Distinction award for the research piece
 
-## thesis.pdf
-final submitted version of work
+## pafitis_thesis.pdf
+final (non-anonymised) submitted version of work
 
 ## /helpers
 contains all main code necessary.
